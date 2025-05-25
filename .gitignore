@@ -1,5 +1,6 @@
 # Archivos de configuración con datos sensibles
 src/config/DatabaseConfig.properties
+
 # Archivos de IDE y compilación
 nbproject/
 build/
@@ -37,3 +38,4 @@ node_modules/
 *.db
 *.sqlite
 *.sqlite3
+src/config/DatabaseConfig.properties
