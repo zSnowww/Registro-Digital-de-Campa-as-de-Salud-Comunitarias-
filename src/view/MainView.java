@@ -17,12 +17,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import model.Usuario;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Main view for the application
  */
-public class MainView extends JFrame {
-    private final Usuario usuarioActual;
+public class MainView extends BaseForm {
+    private Usuario usuarioActual;
     private final UsuarioController usuarioController;
     private final CampanaController campanaController;
     private final ParticipanteController participanteController;
@@ -40,37 +42,61 @@ public class MainView extends JFrame {
     private static final String PANEL_USUARIOS = "usuarios";
     
     public MainView(Usuario usuario) {
+        super("Registro Digital de Campañas de Salud Comunitarias");
+        
+        if (usuario == null) {
+            throw new IllegalArgumentException("El usuario no puede ser null");
+        }
+        
         this.usuarioActual = usuario;
         this.usuarioController = new UsuarioController();
         this.campanaController = new CampanaController();
         this.participanteController = new ParticipanteController();
         this.prediccionController = new PrediccionController();
         
-        setTitle("Registro Digital de Campañas de Salud Comunitarias");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        
-        initComponents();
+        // Initialize layout after all fields are set
+        setupLayout();
     }
     
-    private void initComponents() {
+    @Override
+    protected void setupLayout() {
+        if (usuarioActual == null) {
+            throw new IllegalStateException("usuarioActual no puede ser null");
+        }
+        
         // Create menu bar
+        JMenuBar menuBar = createMenuBar();
+        setJMenuBar(menuBar);
+        
+        // Card panel to switch between views
+        cardPanel = new JPanel();
+        cardLayout = new CardLayout();
+        cardPanel.setLayout(cardLayout);
+        
+        // Create and add panels
+        cardPanel.add(createDashboardPanel(), PANEL_DASHBOARD);
+        cardPanel.add(createCampanasPanel(), PANEL_CAMPANAS);
+        cardPanel.add(createActividadesPanel(), PANEL_ACTIVIDADES);
+        cardPanel.add(createParticipantesPanel(), PANEL_PARTICIPANTES);
+        cardPanel.add(createPrediccionesPanel(), PANEL_PREDICCIONES);
+        cardPanel.add(createUsuariosPanel(), PANEL_USUARIOS);
+        
+        // Add card panel to content panel
+        contentPanel.add(cardPanel, BorderLayout.CENTER);
+        
+        // Show dashboard by default
+        cardLayout.show(cardPanel, PANEL_DASHBOARD);
+    }
+    
+    private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         
         // File menu
         JMenu menuArchivo = new JMenu("Archivo");
         JMenuItem itemSalir = new JMenuItem("Salir");
-        itemSalir.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int option = JOptionPane.showConfirmDialog(MainView.this, 
-                    "¿Está seguro que desea salir?", "Confirmar salida", 
-                    JOptionPane.YES_NO_OPTION);
-                
-                if (option == JOptionPane.YES_OPTION) {
-                    System.exit(0);
-                }
+        itemSalir.addActionListener(e -> {
+            if (showConfirm("¿Está seguro que desea salir?")) {
+                System.exit(0);
             }
         });
         menuArchivo.add(itemSalir);
@@ -78,89 +104,40 @@ public class MainView extends JFrame {
         // Campaign menu
         JMenu menuCampanas = new JMenu("Campañas");
         JMenuItem itemVerCampanas = new JMenuItem("Ver Campañas");
-        itemVerCampanas.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, PANEL_CAMPANAS);
-            }
-        });
+        itemVerCampanas.addActionListener(e -> cardLayout.show(cardPanel, PANEL_CAMPANAS));
         JMenuItem itemNuevaCampana = new JMenuItem("Nueva Campaña");
-        itemNuevaCampana.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Show new campaign dialog
-                JOptionPane.showMessageDialog(MainView.this, 
-                    "Funcionalidad para crear nueva campaña no implementada aún", 
-                    "En desarrollo", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
+        itemNuevaCampana.addActionListener(e -> showInfo("Funcionalidad para crear nueva campaña no implementada aún"));
         menuCampanas.add(itemVerCampanas);
         menuCampanas.add(itemNuevaCampana);
         
         // Activity menu
         JMenu menuActividades = new JMenu("Actividades");
         JMenuItem itemVerActividades = new JMenuItem("Ver Actividades");
-        itemVerActividades.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, PANEL_ACTIVIDADES);
-            }
-        });
+        itemVerActividades.addActionListener(e -> cardLayout.show(cardPanel, PANEL_ACTIVIDADES));
         menuActividades.add(itemVerActividades);
         
         // Participant menu
         JMenu menuParticipantes = new JMenu("Participantes");
         JMenuItem itemVerParticipantes = new JMenuItem("Ver Participantes");
-        itemVerParticipantes.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, PANEL_PARTICIPANTES);
-            }
-        });
+        itemVerParticipantes.addActionListener(e -> cardLayout.show(cardPanel, PANEL_PARTICIPANTES));
         JMenuItem itemRegistrarParticipante = new JMenuItem("Registrar Participante");
-        itemRegistrarParticipante.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Show register participant dialog
-                JOptionPane.showMessageDialog(MainView.this, 
-                    "Funcionalidad para registrar participante no implementada aún", 
-                    "En desarrollo", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
+        itemRegistrarParticipante.addActionListener(e -> showInfo("Funcionalidad para registrar participante no implementada aún"));
         menuParticipantes.add(itemVerParticipantes);
         menuParticipantes.add(itemRegistrarParticipante);
         
         // Prediction menu
         JMenu menuPredicciones = new JMenu("Predicciones");
         JMenuItem itemVerPredicciones = new JMenuItem("Ver Predicciones");
-        itemVerPredicciones.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, PANEL_PREDICCIONES);
-            }
-        });
+        itemVerPredicciones.addActionListener(e -> cardLayout.show(cardPanel, PANEL_PREDICCIONES));
         JMenuItem itemGenerarPrediccion = new JMenuItem("Generar Predicción");
-        itemGenerarPrediccion.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Show generate prediction dialog
-                JOptionPane.showMessageDialog(MainView.this, 
-                    "Funcionalidad para generar predicción no implementada aún", 
-                    "En desarrollo", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
+        itemGenerarPrediccion.addActionListener(e -> showInfo("Funcionalidad para generar predicción no implementada aún"));
         menuPredicciones.add(itemVerPredicciones);
         menuPredicciones.add(itemGenerarPrediccion);
         
         // Admin menu (only for admin users)
         JMenu menuAdmin = new JMenu("Administración");
         JMenuItem itemUsuarios = new JMenuItem("Gestionar Usuarios");
-        itemUsuarios.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(cardPanel, PANEL_USUARIOS);
-            }
-        });
+        itemUsuarios.addActionListener(e -> cardLayout.show(cardPanel, PANEL_USUARIOS));
         menuAdmin.add(itemUsuarios);
         
         // Add menus to menu bar
@@ -175,69 +152,121 @@ public class MainView extends JFrame {
             menuBar.add(menuAdmin);
         }
         
-        // Set menu bar
-        setJMenuBar(menuBar);
-        
-        // Card panel to switch between views
-        cardPanel = new JPanel();
-        cardLayout = new CardLayout();
-        cardPanel.setLayout(cardLayout);
-        
-        // Create and add panels
-        // For now, we'll use placeholder panels
-        JPanel dashboardPanel = new DashboardPanel();
-        JPanel campanasPanel = new JPanel();
-        campanasPanel.setPreferredSize(new Dimension(800, 600));
-        JPanel actividadesPanel = new JPanel();
-        actividadesPanel.setPreferredSize(new Dimension(800, 600));
-        JPanel participantesPanel = new JPanel();
-        participantesPanel.setPreferredSize(new Dimension(800, 600));
-        JPanel prediccionesPanel = new JPanel();
-        prediccionesPanel.setPreferredSize(new Dimension(800, 600));
-        JPanel usuariosPanel = new JPanel();
-        usuariosPanel.setPreferredSize(new Dimension(800, 600));
-        
-        // Add panels to card panel
-        cardPanel.add(dashboardPanel, PANEL_DASHBOARD);
-        cardPanel.add(campanasPanel, PANEL_CAMPANAS);
-        cardPanel.add(actividadesPanel, PANEL_ACTIVIDADES);
-        cardPanel.add(participantesPanel, PANEL_PARTICIPANTES);
-        cardPanel.add(prediccionesPanel, PANEL_PREDICCIONES);
-        cardPanel.add(usuariosPanel, PANEL_USUARIOS);
-        
-        // Show dashboard by default
-        cardLayout.show(cardPanel, PANEL_DASHBOARD);
-        
-        // Add card panel to frame
-        add(cardPanel, BorderLayout.CENTER);
+        return menuBar;
     }
     
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // For testing only - create a dummy user
-                Usuario dummyUser = new Usuario();
-                dummyUser.setIdUsuario(1);
-                dummyUser.setNombre("Admin");
-                dummyUser.setApellido("Test");
-                dummyUser.setDni("12345678");
-                dummyUser.setRol("Administrador");
-                
-                new MainView(dummyUser).setVisible(true);
-            }
-        });
+    private JPanel createDashboardPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Add welcome message
+        JLabel welcomeLabel = new JLabel(
+            "Bienvenido " + usuarioActual.getNombre() + " " + usuarioActual.getApellido(),
+            SwingConstants.CENTER
+        );
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        panel.add(welcomeLabel, BorderLayout.CENTER);
+        
+        return panel;
     }
     
-    // Inner class for the dashboard panel
-    private class DashboardPanel extends JPanel {
-        public DashboardPanel() {
-            setLayout(new BorderLayout(10, 10));
-            setPreferredSize(new Dimension(800, 600));
-            
-            // Add dashboard components here
-            // This is just a placeholder for now
-            add(new javax.swing.JLabel("Bienvenido al Sistema de Registro Digital de Campañas de Salud Comunitarias", javax.swing.JLabel.CENTER), BorderLayout.CENTER);
-        }
+    private JPanel createCampanasPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Add table
+        String[] columnNames = {"ID", "Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Responsable"};
+        JTable table = createTable(columnNames);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(createButton("Nueva Campaña"));
+        buttonPanel.add(createButton("Editar"));
+        buttonPanel.add(createButton("Eliminar"));
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createActividadesPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Add table
+        String[] columnNames = {"ID", "Nombre", "Descripción", "Fecha", "Hora", "Campaña"};
+        JTable table = createTable(columnNames);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(createButton("Nueva Actividad"));
+        buttonPanel.add(createButton("Editar"));
+        buttonPanel.add(createButton("Eliminar"));
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createParticipantesPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Add table
+        String[] columnNames = {"ID", "Nombre", "Apellido", "DNI", "Edad", "Sexo", "Dirección"};
+        JTable table = createTable(columnNames);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(createButton("Nuevo Participante"));
+        buttonPanel.add(createButton("Editar"));
+        buttonPanel.add(createButton("Eliminar"));
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createPrediccionesPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Add table
+        String[] columnNames = {"ID", "Campaña", "Fecha Predicción", "Participación Estimada", "Notas"};
+        JTable table = createTable(columnNames);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(createButton("Nueva Predicción"));
+        buttonPanel.add(createButton("Editar"));
+        buttonPanel.add(createButton("Eliminar"));
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
+    }
+    
+    private JPanel createUsuariosPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Add table
+        String[] columnNames = {"ID", "Nombre", "Apellido", "Correo", "DNI", "Rol"};
+        JTable table = createTable(columnNames);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Add buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(createButton("Nuevo Usuario"));
+        buttonPanel.add(createButton("Editar"));
+        buttonPanel.add(createButton("Eliminar"));
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        return panel;
     }
 } 
