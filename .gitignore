@@ -1,6 +1,5 @@
 # Archivos de configuración con datos sensibles
-src/resources/database.properties
-
+src/config/DatabaseConfig.properties
 # Archivos de IDE y compilación
 nbproject/
 build/
