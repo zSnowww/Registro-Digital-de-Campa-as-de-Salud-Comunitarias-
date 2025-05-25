@@ -1,0 +1,40 @@
+# Archivos de configuración con datos sensibles
+src/resources/database.properties
+
+# Archivos de IDE y compilación
+nbproject/
+build/
+dist/
+*.class
+*.jar
+*.war
+*.ear
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de logs
+*.log
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de configuración local
+application-local.properties
+application-dev.properties
+
+# Archivos de dependencias
+lib/
+node_modules/
+
+# Archivos de respaldo
+*.bak
+*.backup
+*~
+
+# Archivos de base de datos
+*.db
+*.sqlite
+*.sqlite3
