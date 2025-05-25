@@ -144,12 +144,34 @@ public class UsuarioDAO {
             
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return extractUserFromResultSet(rs);
+                Usuario usuario = extractUserFromResultSet(rs);
+                // Actualizar último login
+                updateLastLogin(usuario.getIdUsuario());
+                return usuario;
             }
         } catch (SQLException e) {
             System.err.println("Error authenticating user: " + e.getMessage());
         }
         return null;
+    }
+    
+    /**
+     * Update the last login timestamp for a user
+     * @param idUsuario User's ID
+     * @return true if successful, false otherwise
+     */
+    public boolean updateLastLogin(int idUsuario) {
+        String sql = "UPDATE Usuario SET UltimoAcceso = GETDATE() WHERE idUsuario = ?";
+        try {
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, idUsuario);
+            
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating last login: " + e.getMessage());
+            return false;
+        }
     }
     
     /**
@@ -187,6 +209,7 @@ public class UsuarioDAO {
         usuario.setDni(rs.getString("dni"));
         usuario.setRol(rs.getString("rol"));
         usuario.setContrasena(rs.getString("contrasena"));
+        usuario.setUltimoAcceso(rs.getTimestamp("UltimoAcceso"));
         return usuario;
     }
 } 
