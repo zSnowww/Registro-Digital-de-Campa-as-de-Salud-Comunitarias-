@@ -1,0 +1,8 @@
+# Database Configuration Example
+# Rename this file to database.properties and fill in your actual values
+
+# Database connection settings
+db.url=jdbc:sqlserver://localhost:1433;databaseName=CampanaSalud;encrypt=true;trustServerCertificate=true
+db.user=your_username
+db.password=your_password
+db.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver 
