@@ -38,4 +38,3 @@ node_modules/
 *.db
 *.sqlite
 *.sqlite3
-src/config/DatabaseConfig.properties
