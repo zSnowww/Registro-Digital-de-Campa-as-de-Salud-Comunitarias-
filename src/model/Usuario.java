@@ -1,5 +1,7 @@
 package model;
 
+import java.util.Date;
+
 /**
  * Class representing a user in the system
  */
@@ -11,6 +13,7 @@ public class Usuario {
     private String dni;
     private String rol;
     private String contrasena;
+    private Date ultimoAcceso;
     
     // Constructor
     public Usuario() {
@@ -81,6 +84,14 @@ public class Usuario {
 
     public void setContrasena(String contrasena) {
         this.contrasena = contrasena;
+    }
+
+    public Date getUltimoAcceso() {
+        return ultimoAcceso;
+    }
+
+    public void setUltimoAcceso(Date ultimoAcceso) {
+        this.ultimoAcceso = ultimoAcceso;
     }
     
     @Override
