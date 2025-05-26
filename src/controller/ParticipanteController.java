@@ -1,8 +1,12 @@
 package controller;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 import model.Participante;
 import model.dao.ParticipanteDAO;
+import model.database.DatabaseConnection;
 
 /**
  * Controller class for handling Participante business logic
@@ -22,23 +26,40 @@ public class ParticipanteController {
      * @param edad Participant's age
      * @param sexo Participant's gender
      * @param direccion Participant's address
+     * @param telefono Participant's phone number
+     * @param correo Participant's email
      * @return true if successful, false otherwise
      */
-    public boolean registrarParticipante(String nombre, String apellido, String dni, int edad, String sexo, String direccion) {
-        // Check if participant with the same DNI already exists
-        if (participanteDAO.findByDni(dni) != null) {
-            return false; // Participant already exists
+    public boolean registrarParticipante(String nombre, String apellido, String dni, int edad, String sexo, String direccion, String telefono, String correo) {
+        String sql = "INSERT INTO Participante (nombre, apellido, dni, edad, sexo, direccion, telefono, correo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            
+            pstmt.setString(1, nombre);
+            pstmt.setString(2, apellido);
+            pstmt.setString(3, dni);
+            pstmt.setInt(4, edad);
+            pstmt.setString(5, sexo);
+            pstmt.setString(6, direccion);
+            pstmt.setString(7, telefono);
+            pstmt.setString(8, correo);
+            
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-        
-        Participante participante = new Participante();
-        participante.setNombre(nombre);
-        participante.setApellido(apellido);
-        participante.setDni(dni);
-        participante.setEdad(edad);
-        participante.setSexo(sexo);
-        participante.setDireccion(direccion);
-        
-        return participanteDAO.insert(participante);
     }
     
     /**
@@ -117,4 +138,12 @@ public class ParticipanteController {
     public List<Participante> buscarParticipantesPorNombre(String nombre) {
         return participanteDAO.findByName(nombre);
     }
+    /**
+    * Busca un participante por su DNI
+    * @param dni El DNI del participante a buscar
+    * @return El participante si se encuentra, null si no existe
+    */
+   public Participante buscarPorDni(String dni) {
+       return participanteDAO.findByDni(dni);
+   }
 } 
