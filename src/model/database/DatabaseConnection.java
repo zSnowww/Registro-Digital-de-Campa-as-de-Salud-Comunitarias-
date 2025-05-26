@@ -19,8 +19,6 @@ public class DatabaseConnection {
     private static final int MAX_RETRIES = 3;
     private static final int RETRY_DELAY_MS = 1000;
     
-    private static Connection connection;
-    
     static {
         try {
             Properties props = new Properties();
@@ -31,40 +29,39 @@ public class DatabaseConnection {
             URL = baseUrl + ";trustServerCertificate=true;connectRetryCount=3;connectRetryInterval=10;connectionTimeout=30";
             USER = props.getProperty("db.user");
             PASSWORD = props.getProperty("db.password");
-        } catch (IOException e) {
+            
+            // Cargar el driver
+            Class.forName(DRIVER);
+        } catch (IOException | ClassNotFoundException e) {
             System.err.println("Error loading database configuration: " + e.getMessage());
         }
     }
     
     /**
-     * Get the database connection
+     * Get a new database connection
      * @return Connection object
      */
     public static Connection getConnection() {
-        if (connection == null || isConnectionClosed()) {
-            int retryCount = 0;
-            while (retryCount < MAX_RETRIES) {
-                try {
-                    Class.forName(DRIVER);
-                    connection = DriverManager.getConnection(URL, USER, PASSWORD);
-                    if (connection != null && !connection.isClosed()) {
-                        return connection;
-                    }
-                } catch (ClassNotFoundException | SQLException e) {
-                    System.err.println("Database Connection Error (Attempt " + (retryCount + 1) + "): " + e.getMessage());
-                    retryCount++;
-                    if (retryCount < MAX_RETRIES) {
-                        try {
-                            Thread.sleep(RETRY_DELAY_MS);
-                        } catch (InterruptedException ie) {
-                            Thread.currentThread().interrupt();
-                        }
+        int retryCount = 0;
+        while (retryCount < MAX_RETRIES) {
+            try {
+                Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+                if (conn != null && !conn.isClosed()) {
+                    return conn;
+                }
+            } catch (SQLException e) {
+                System.err.println("Database Connection Error (Attempt " + (retryCount + 1) + "): " + e.getMessage());
+                retryCount++;
+                if (retryCount < MAX_RETRIES) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
-            throw new RuntimeException("Failed to establish database connection after " + MAX_RETRIES + " attempts");
         }
-        return connection;
+        throw new RuntimeException("Failed to establish database connection after " + MAX_RETRIES + " attempts");
     }
     
     /**
