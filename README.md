@@ -44,7 +44,7 @@ Sistema integral para el registro, monitoreo, análisis y predicción de campañ
 
 ### 1. Clonar el Repositorio
 ```bash
-git clone https://github.com/tu-usuario/AppInforme.git
+git clone https://github.com/zSnowww/Registro-digital-de-campa-as-de-salud-comunitarias.git
 cd AppInforme
 ```
 
