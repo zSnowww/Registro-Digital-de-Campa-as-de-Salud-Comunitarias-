@@ -45,6 +45,9 @@ local.properties
 # Visual Studio Code
 .vscode/
 
+# Cursor Editor
+.cursor/
+
 # ===== ARCHIVOS DE SISTEMA =====
 # Windows
 Thumbs.db

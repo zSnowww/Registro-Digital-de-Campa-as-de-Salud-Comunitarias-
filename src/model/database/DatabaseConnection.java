@@ -45,9 +45,9 @@ public class DatabaseConnection {
         int retryCount = 0;
         while (retryCount < MAX_RETRIES) {
             try {
-                Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-                if (conn != null && !conn.isClosed()) {
-                    return conn;
+                Connection newConnection = DriverManager.getConnection(URL, USER, PASSWORD);
+                if (newConnection != null && !newConnection.isClosed()) {
+                    return newConnection;
                 }
             } catch (SQLException e) {
                 System.err.println("Database Connection Error (Attempt " + (retryCount + 1) + "): " + e.getMessage());
@@ -65,25 +65,13 @@ public class DatabaseConnection {
     }
     
     /**
-     * Check if the connection is closed
-     * @return true if connection is closed or null
+     * Close a database connection
+     * @param conn The connection to close
      */
-    private static boolean isConnectionClosed() {
-        try {
-            return connection == null || connection.isClosed();
-        } catch (SQLException e) {
-            return true;
-        }
-    }
-    
-    /**
-     * Close the database connection
-     */
-    public static void closeConnection() {
-        if (connection != null) {
+    public static void closeConnection(Connection conn) {
+        if (conn != null) {
             try {
-                connection.close();
-                connection = null;
+                conn.close();
             } catch (SQLException e) {
                 System.err.println("Error closing connection: " + e.getMessage());
             }

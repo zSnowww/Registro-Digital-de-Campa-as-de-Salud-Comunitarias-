@@ -10,7 +10,7 @@ import model.Prediccion;
 import model.database.DatabaseConnection;
 
 /**
- * Data Access Object for Prediccion entity
+ * Objeto de Acceso a Datos para la entidad Prediccion
  */
 public class PrediccionDAO {
     private Connection conn;
@@ -20,23 +20,24 @@ public class PrediccionDAO {
     }
     
     /**
-     * Insert a new prediction into the database
-     * @param prediccion The prediction to insert
-     * @return true if successful, false otherwise
+     * Inserta una nueva predicción en la base de datos
+     * @param prediccion La predicción a insertar
+     * @return true si es exitoso, false en caso contrario
      */
     public boolean insert(Prediccion prediccion) {
-        String sql = "INSERT INTO Prediccion (idCampana, fechaPrediccion, participacionEstimada, notas) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Prediccion (idCampana, fechaPrediccion, participacionEstimada, nivelConfianza, notas) VALUES (?, ?, ?, ?, ?)";
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, prediccion.getIdCampana());
             stmt.setDate(2, new java.sql.Date(prediccion.getFechaPrediccion().getTime()));
             stmt.setInt(3, prediccion.getParticipacionEstimada());
-            stmt.setString(4, prediccion.getNotas());
+            stmt.setDouble(4, prediccion.getNivelConfianza());
+            stmt.setString(5, prediccion.getNotas());
             
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.err.println("Error inserting prediction: " + e.getMessage());
+            System.err.println("Error al insertar predicción: " + e.getMessage());
             return false;
         }
     }
@@ -47,14 +48,15 @@ public class PrediccionDAO {
      * @return true if successful, false otherwise
      */
     public boolean update(Prediccion prediccion) {
-        String sql = "UPDATE Prediccion SET idCampana = ?, fechaPrediccion = ?, participacionEstimada = ?, notas = ? WHERE idPrediccion = ?";
+        String sql = "UPDATE Prediccion SET idCampana = ?, fechaPrediccion = ?, participacionEstimada = ?, nivelConfianza = ?, notas = ? WHERE idPrediccion = ?";
         try {
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, prediccion.getIdCampana());
             stmt.setDate(2, new java.sql.Date(prediccion.getFechaPrediccion().getTime()));
             stmt.setInt(3, prediccion.getParticipacionEstimada());
-            stmt.setString(4, prediccion.getNotas());
-            stmt.setInt(5, prediccion.getIdPrediccion());
+            stmt.setDouble(4, prediccion.getNivelConfianza());
+            stmt.setString(5, prediccion.getNotas());
+            stmt.setInt(6, prediccion.getIdPrediccion());
             
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
@@ -157,6 +159,7 @@ public class PrediccionDAO {
         prediccion.setIdCampana(rs.getInt("idCampana"));
         prediccion.setFechaPrediccion(rs.getDate("fechaPrediccion"));
         prediccion.setParticipacionEstimada(rs.getInt("participacionEstimada"));
+        prediccion.setNivelConfianza(rs.getDouble("nivelConfianza"));
         prediccion.setNotas(rs.getString("notas"));
         return prediccion;
     }

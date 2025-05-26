@@ -1,108 +1,175 @@
 package model;
 
+import java.util.Date;
+
 /**
  * Class representing a participant in health campaigns
  */
 public class Participante {
-    private int idParticipante;
-    private String nombre;
-    private String apellido;
+    private int id;
     private String dni;
-    private int edad;
-    private String sexo;
+    private String nombres;
+    private String apellidos;
+    private Date fechaNacimiento;
+    private String genero;
     private String direccion;
     private String telefono;
-    private String correo;
+    private String email;
     
     // Constructor
     public Participante() {
     }
     
-    public Participante(int idParticipante, String nombre, String apellido, String dni, int edad, String sexo, String direccion) {
-        this.idParticipante = idParticipante;
-        this.nombre = nombre;
-        this.apellido = apellido;
+    public Participante(int id, String dni, String nombres, String apellidos, Date fechaNacimiento, 
+                       String genero, String direccion, String telefono, String email) {
+        this.id = id;
         this.dni = dni;
-        this.edad = edad;
-        this.sexo = sexo;
+        this.nombres = nombres;
+        this.apellidos = apellidos;
+        this.fechaNacimiento = fechaNacimiento;
+        this.genero = genero;
         this.direccion = direccion;
+        this.telefono = telefono;
+        this.email = email;
     }
     
     // Getters and Setters
-    public int getIdParticipante() {
-        return idParticipante;
+    public int getId() {
+        return id;
     }
-
-    public void setIdParticipante(int idParticipante) {
-        this.idParticipante = idParticipante;
+    
+    public void setId(int id) {
+        this.id = id;
     }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getApellido() {
-        return apellido;
-    }
-
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
-    }
-
+    
     public String getDni() {
         return dni;
     }
-
+    
     public void setDni(String dni) {
         this.dni = dni;
     }
-
-    public int getEdad() {
-        return edad;
+    
+    public String getNombres() {
+        return nombres;
     }
-
-    public void setEdad(int edad) {
-        this.edad = edad;
+    
+    public void setNombres(String nombres) {
+        this.nombres = nombres;
     }
-
-    public String getSexo() {
-        return sexo;
+    
+    public String getApellidos() {
+        return apellidos;
     }
-
-    public void setSexo(String sexo) {
-        this.sexo = sexo;
+    
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
     }
-
+    
+    public Date getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+    
+    public void setFechaNacimiento(Date fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+    
+    public String getGenero() {
+        return genero;
+    }
+    
+    public void setGenero(String genero) {
+        this.genero = genero;
+    }
+    
     public String getDireccion() {
         return direccion;
     }
-
+    
     public void setDireccion(String direccion) {
         this.direccion = direccion;
     }
-
+    
     public String getTelefono() {
         return telefono;
     }
-
+    
     public void setTelefono(String telefono) {
         this.telefono = telefono;
     }
-
-    public String getCorreo() {
-        return correo;
+    
+    public String getEmail() {
+        return email;
     }
-
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    // Alias methods to match controller/DAO naming conventions
+    public int getIdParticipante() {
+        return id;
+    }
+    
+    public void setIdParticipante(int idParticipante) {
+        this.id = idParticipante;
+    }
+    
+    public String getNombre() {
+        return nombres;
+    }
+    
+    public void setNombre(String nombre) {
+        this.nombres = nombre;
+    }
+    
+    public String getApellido() {
+        return apellidos;
+    }
+    
+    public void setApellido(String apellido) {
+        this.apellidos = apellido;
+    }
+    
+    public int getEdad() {
+        // Calculate age from fechaNacimiento if needed
+        if (fechaNacimiento != null) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            int currentYear = cal.get(java.util.Calendar.YEAR);
+            cal.setTime(fechaNacimiento);
+            int birthYear = cal.get(java.util.Calendar.YEAR);
+            return currentYear - birthYear;
+        }
+        return 0;
+    }
+    
+    public void setEdad(int edad) {
+        // Calculate fechaNacimiento from age
+        if (edad > 0) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.add(java.util.Calendar.YEAR, -edad);
+            this.fechaNacimiento = cal.getTime();
+        }
+    }
+    
+    public String getSexo() {
+        return genero;
+    }
+    
+    public void setSexo(String sexo) {
+        this.genero = sexo;
+    }
+    
+    public String getCorreo() {
+        return email;
+    }
+    
     public void setCorreo(String correo) {
-        this.correo = correo;
+        this.email = correo;
     }
     
     @Override
     public String toString() {
-        return nombre + " " + apellido;
+        return nombres + " " + apellidos;
     }
 } 

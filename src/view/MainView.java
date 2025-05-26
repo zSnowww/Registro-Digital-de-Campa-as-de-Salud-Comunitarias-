@@ -4,6 +4,7 @@ import controller.CampanaController;
 import controller.ParticipanteController;
 import controller.PrediccionController;
 import controller.UsuarioController;
+import controller.ActividadController;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
@@ -16,12 +17,18 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.ListSelectionModel;
 import model.Usuario;
+import model.Actividad;
+import model.Campana;
+import model.Prediccion;
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 /**
- * Main view for the application
+ * Vista principal de la aplicación
  */
 public class MainView extends BaseForm {
     private Usuario usuarioActual;
@@ -33,7 +40,7 @@ public class MainView extends BaseForm {
     private JPanel cardPanel;
     private CardLayout cardLayout;
     
-    // Panel names
+    // Nombres de paneles
     private static final String PANEL_DASHBOARD = "dashboard";
     private static final String PANEL_CAMPANAS = "campanas";
     private static final String PANEL_ACTIVIDADES = "actividades";
@@ -54,7 +61,7 @@ public class MainView extends BaseForm {
         this.participanteController = new ParticipanteController();
         this.prediccionController = new PrediccionController();
         
-        // Initialize layout after all fields are set
+        // Inicializar diseño después de configurar todos los campos
         setupLayout();
     }
     
@@ -91,15 +98,19 @@ public class MainView extends BaseForm {
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         
-        // File menu
-        JMenu menuArchivo = new JMenu("Archivo");
+        // Inicio menu (combines dashboard and exit functionality)
+        JMenu menuInicio = new JMenu("Inicio");
+        JMenuItem itemDashboard = new JMenuItem("Ver Dashboard");
+        itemDashboard.addActionListener(e -> cardLayout.show(cardPanel, PANEL_DASHBOARD));
         JMenuItem itemSalir = new JMenuItem("Salir");
         itemSalir.addActionListener(e -> {
             if (showConfirm("¿Está seguro que desea salir?")) {
                 System.exit(0);
             }
         });
-        menuArchivo.add(itemSalir);
+        menuInicio.add(itemDashboard);
+        menuInicio.addSeparator(); // Add separator between dashboard and exit
+        menuInicio.add(itemSalir);
         
         // Campaign menu
         JMenu menuCampanas = new JMenu("Campañas");
@@ -112,7 +123,7 @@ public class MainView extends BaseForm {
         
         // Activity menu
         JMenu menuActividades = new JMenu("Actividades");
-        JMenuItem itemVerActividades = new JMenuItem("Ver Actividades");
+        JMenuItem itemVerActividades = new JMenuItem("Gestionar Actividades");
         itemVerActividades.addActionListener(e -> cardLayout.show(cardPanel, PANEL_ACTIVIDADES));
         JMenuItem itemRegistrarParticipacion = new JMenuItem("Registrar Participación");
         itemRegistrarParticipacion.addActionListener(e -> {
@@ -142,7 +153,10 @@ public class MainView extends BaseForm {
         JMenuItem itemVerPredicciones = new JMenuItem("Ver Predicciones");
         itemVerPredicciones.addActionListener(e -> cardLayout.show(cardPanel, PANEL_PREDICCIONES));
         JMenuItem itemGenerarPrediccion = new JMenuItem("Generar Predicción");
-        itemGenerarPrediccion.addActionListener(e -> showInfo("Funcionalidad para generar predicción no implementada aún"));
+        itemGenerarPrediccion.addActionListener(e -> {
+            PrediccionFormView formView = new PrediccionFormView(null);
+            formView.setVisible(true);
+        });
         menuPredicciones.add(itemVerPredicciones);
         menuPredicciones.add(itemGenerarPrediccion);
         
@@ -153,7 +167,7 @@ public class MainView extends BaseForm {
         menuAdmin.add(itemUsuarios);
         
         // Add menus to menu bar
-        menuBar.add(menuArchivo);
+        menuBar.add(menuInicio);
         menuBar.add(menuCampanas);
         menuBar.add(menuActividades);
         menuBar.add(menuParticipantes);
@@ -168,18 +182,8 @@ public class MainView extends BaseForm {
     }
     
     private JPanel createDashboardPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        // Add welcome message
-        JLabel welcomeLabel = new JLabel(
-            "Bienvenido " + usuarioActual.getNombre() + " " + usuarioActual.getApellido(),
-            SwingConstants.CENTER
-        );
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        panel.add(welcomeLabel, BorderLayout.CENTER);
-        
-        return panel;
+        DashboardView dashboardView = new DashboardView();
+        return dashboardView.getMainPanel();
     }
     
     private JPanel createCampanasPanel() {
@@ -206,20 +210,177 @@ public class MainView extends BaseForm {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Add table
-        String[] columnNames = {"ID", "Nombre", "Descripción", "Fecha", "Hora", "Campaña"};
-        JTable table = createTable(columnNames);
+        // Add title
+        JLabel titleLabel = new JLabel("Gestión de Actividades");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        panel.add(titleLabel, BorderLayout.NORTH);
+        
+        // Create table with data from database
+        String[] columnNames = {"ID", "Nombre", "Descripción", "Fecha", "Hora", "Campaña", "Capacidad", "Registrados", "Estado"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table read-only
+            }
+        };
+        
+        JTable table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setReorderingAllowed(false);
+        
+        // Load data from database
+        loadActividadesData(tableModel);
+        
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
         
-        // Add buttons
+        // Add buttons with functionality
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(createButton("Nueva Actividad"));
-        buttonPanel.add(createButton("Editar"));
-        buttonPanel.add(createButton("Eliminar"));
+        
+        JButton btnNueva = new JButton("Nueva Actividad");
+        btnNueva.addActionListener(e -> {
+            ActividadFormView formView = new ActividadFormView(null);
+            formView.setVisible(true);
+            formView.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent e) {
+                    loadActividadesData(tableModel); // Refresh table after form closes
+                }
+            });
+        });
+        
+        JButton btnEditar = new JButton("Editar");
+        btnEditar.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Por favor, seleccione una actividad para editar.");
+                return;
+            }
+            
+            int actividadId = (Integer) tableModel.getValueAt(selectedRow, 0);
+            ActividadController controller = new ActividadController();
+            Actividad actividad = controller.obtenerActividadPorId(actividadId);
+            
+            if (actividad != null) {
+                ActividadFormView formView = new ActividadFormView(actividad);
+                formView.setVisible(true);
+                formView.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosed(java.awt.event.WindowEvent e) {
+                        loadActividadesData(tableModel); // Refresh table after form closes
+                    }
+                });
+            }
+        });
+        
+        JButton btnEliminar = new JButton("Eliminar");
+        btnEliminar.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Por favor, seleccione una actividad para eliminar.");
+                return;
+            }
+            
+            if (showConfirm("¿Está seguro que desea eliminar esta actividad?")) {
+                int actividadId = (Integer) tableModel.getValueAt(selectedRow, 0);
+                ActividadController controller = new ActividadController();
+                
+                if (controller.eliminarActividad(actividadId)) {
+                    showInfo("Actividad eliminada exitosamente.");
+                    loadActividadesData(tableModel); // Refresh table
+                } else {
+                    showError("Error al eliminar la actividad.");
+                }
+            }
+        });
+        
+        JButton btnRefrescar = new JButton("Refrescar");
+        btnRefrescar.addActionListener(e -> loadActividadesData(tableModel));
+        
+        buttonPanel.add(btnNueva);
+        buttonPanel.add(btnEditar);
+        buttonPanel.add(btnEliminar);
+        buttonPanel.add(btnRefrescar);
         panel.add(buttonPanel, BorderLayout.SOUTH);
         
         return panel;
+    }
+    
+    private void loadActividadesData(DefaultTableModel tableModel) {
+        // Clear existing data
+        tableModel.setRowCount(0);
+        
+        try {
+            ActividadController actividadController = new ActividadController();
+            CampanaController campanaController = new CampanaController();
+            List<Actividad> actividades = actividadController.listarActividades();
+            
+            for (Actividad actividad : actividades) {
+                // Get campaign name instead of just ID
+                String nombreCampana = "Campaña " + actividad.getIdCampana(); // Default fallback
+                try {
+                    Campana campana = campanaController.obtenerCampanaPorId(actividad.getIdCampana());
+                    if (campana != null) {
+                        nombreCampana = campana.getNombre();
+                    }
+                } catch (Exception e) {
+                    // Keep default if campaign not found
+                }
+                
+                Object[] row = {
+                    actividad.getIdActividad(),
+                    actividad.getNombre(),
+                    actividad.getDescripcion(),
+                    actividad.getFecha(),
+                    actividad.getHora(),
+                    nombreCampana,
+                    actividad.getCupoMaximo(),
+                    actividad.getParticipantesRegistrados(),
+                    actividad.getEstado()
+                };
+                tableModel.addRow(row);
+            }
+        } catch (Exception e) {
+            showError("Error al cargar las actividades: " + e.getMessage());
+        }
+    }
+    
+    private void loadPrediccionesData(DefaultTableModel tableModel) {
+        // Clear existing data
+        tableModel.setRowCount(0);
+        
+        try {
+            List<model.Prediccion> predicciones = prediccionController.listarPredicciones();
+            
+            for (model.Prediccion prediccion : predicciones) {
+                // Get campaign name instead of just ID
+                String nombreCampana = "Campaña " + prediccion.getIdCampana(); // Default fallback
+                try {
+                    Campana campana = campanaController.obtenerCampanaPorId(prediccion.getIdCampana());
+                    if (campana != null) {
+                        nombreCampana = campana.getNombre();
+                    }
+                } catch (Exception e) {
+                    // Keep default if campaign not found
+                }
+                
+                // Format confidence level as percentage
+                String nivelConfianza = String.format("%.1f%%", prediccion.getNivelConfianza());
+                
+                Object[] row = {
+                    prediccion.getIdPrediccion(),
+                    nombreCampana,
+                    prediccion.getFechaPrediccion(),
+                    prediccion.getParticipacionEstimada(),
+                    nivelConfianza,
+                    prediccion.getNotas()
+                };
+                tableModel.addRow(row);
+            }
+        } catch (Exception e) {
+            showError("Error al cargar las predicciones: " + e.getMessage());
+        }
     }
     
     private JPanel createParticipantesPanel() {
@@ -246,17 +407,96 @@ public class MainView extends BaseForm {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Add table
-        String[] columnNames = {"ID", "Campaña", "Fecha Predicción", "Participación Estimada", "Notas"};
-        JTable table = createTable(columnNames);
+        // Add title
+        JLabel titleLabel = new JLabel("Gestión de Predicciones");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        panel.add(titleLabel, BorderLayout.NORTH);
+        
+        // Create table with data from database
+        String[] columnNames = {"ID", "Campaña", "Fecha Predicción", "Participación Estimada", "Nivel Confianza", "Notas"};
+        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table read-only
+            }
+        };
+        
+        JTable table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.getTableHeader().setReorderingAllowed(false);
+        
+        // Load data from database
+        loadPrediccionesData(tableModel);
+        
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
         
-        // Add buttons
+        // Add buttons with functionality
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(createButton("Nueva Predicción"));
-        buttonPanel.add(createButton("Editar"));
-        buttonPanel.add(createButton("Eliminar"));
+        
+        JButton btnNueva = new JButton("Generar Predicción");
+        btnNueva.addActionListener(e -> {
+            PrediccionFormView formView = new PrediccionFormView(null);
+            formView.setVisible(true);
+            formView.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent e) {
+                    loadPrediccionesData(tableModel); // Refresh table after form closes
+                }
+            });
+        });
+        
+        JButton btnEditar = new JButton("Editar");
+        btnEditar.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Por favor, seleccione una predicción para editar.");
+                return;
+            }
+            
+            int prediccionId = (Integer) tableModel.getValueAt(selectedRow, 0);
+            model.Prediccion prediccion = prediccionController.obtenerPrediccionPorId(prediccionId);
+            
+            if (prediccion != null) {
+                PrediccionFormView formView = new PrediccionFormView(prediccion);
+                formView.setVisible(true);
+                formView.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosed(java.awt.event.WindowEvent e) {
+                        loadPrediccionesData(tableModel); // Refresh table after form closes
+                    }
+                });
+            }
+        });
+        
+        JButton btnEliminar = new JButton("Eliminar");
+        btnEliminar.addActionListener(e -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Por favor, seleccione una predicción para eliminar.");
+                return;
+            }
+            
+            if (showConfirm("¿Está seguro que desea eliminar esta predicción?")) {
+                int prediccionId = (Integer) tableModel.getValueAt(selectedRow, 0);
+                
+                if (prediccionController.eliminarPrediccion(prediccionId)) {
+                    showInfo("Predicción eliminada exitosamente.");
+                    loadPrediccionesData(tableModel); // Refresh table
+                } else {
+                    showError("Error al eliminar la predicción.");
+                }
+            }
+        });
+        
+        JButton btnRefrescar = new JButton("Refrescar");
+        btnRefrescar.addActionListener(e -> loadPrediccionesData(tableModel));
+        
+        buttonPanel.add(btnNueva);
+        buttonPanel.add(btnEditar);
+        buttonPanel.add(btnEliminar);
+        buttonPanel.add(btnRefrescar);
         panel.add(buttonPanel, BorderLayout.SOUTH);
         
         return panel;
@@ -280,5 +520,10 @@ public class MainView extends BaseForm {
         panel.add(buttonPanel, BorderLayout.SOUTH);
         
         return panel;
+    }
+    
+    // Add getter for mainPanel in DashboardView
+    public JPanel getMainPanel() {
+        return mainPanel;
     }
 } 

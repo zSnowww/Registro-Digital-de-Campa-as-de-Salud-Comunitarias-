@@ -1,8 +1,9 @@
 package controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import model.Usuario;
-import dao.UsuarioDAO;
+import model.dao.UsuarioDAO;
 
 /**
  * Controller class for handling Usuario business logic
@@ -26,7 +27,7 @@ public class UsuarioController {
      */
     public boolean registrarUsuario(String nombre, String apellido, String correo, String dni, String rol, String contrasena) throws Exception {
         // Check if user with the same DNI already exists
-        if (usuarioDAO.buscarPorDNI(dni) != null) {
+        if (usuarioDAO.findByDni(dni) != null) {
             return false; // User already exists
         }
         
@@ -38,7 +39,7 @@ public class UsuarioController {
         usuario.setRol(rol);
         usuario.setContrasena(contrasena);
         
-        return usuarioDAO.insertar(usuario);
+        return usuarioDAO.insert(usuario);
     }
     
     /**
@@ -48,12 +49,7 @@ public class UsuarioController {
      * @return The authenticated user or null if authentication fails
      */
     public Usuario autenticarUsuario(String dni, String contrasena) throws Exception {
-        Usuario usuario = usuarioDAO.buscarPorDNI(dni);
-        if (usuario != null && usuario.getContrasena().equals(contrasena)) {
-            usuarioDAO.actualizarUltimoAcceso(usuario.getIdUsuario());
-            return usuario;
-        }
-        return null;
+        return usuarioDAO.authenticate(dni, contrasena);
     }
     
     /**
@@ -68,13 +64,13 @@ public class UsuarioController {
      * @return true if successful, false otherwise
      */
     public boolean actualizarUsuario(int idUsuario, String nombre, String apellido, String correo, String dni, String rol, String contrasena) throws Exception {
-        Usuario usuario = usuarioDAO.buscarPorId(idUsuario);
+        Usuario usuario = usuarioDAO.findById(idUsuario);
         if (usuario == null) {
             return false; // User doesn't exist
         }
         
         // Check if DNI is being changed and if the new DNI is already in use
-        if (!dni.equals(usuario.getDni()) && usuarioDAO.buscarPorDNI(dni) != null) {
+        if (!dni.equals(usuario.getDni()) && usuarioDAO.findByDni(dni) != null) {
             return false; // New DNI is already in use
         }
         
@@ -89,7 +85,7 @@ public class UsuarioController {
             usuario.setContrasena(contrasena);
         }
         
-        return usuarioDAO.actualizar(usuario);
+        return usuarioDAO.update(usuario);
     }
     
     /**
@@ -98,7 +94,7 @@ public class UsuarioController {
      * @return true if successful, false otherwise
      */
     public boolean eliminarUsuario(int idUsuario) throws Exception {
-        return usuarioDAO.eliminar(idUsuario);
+        return usuarioDAO.delete(idUsuario);
     }
     
     /**
@@ -107,7 +103,7 @@ public class UsuarioController {
      * @return The user if found, null otherwise
      */
     public Usuario obtenerUsuarioPorId(int idUsuario) throws Exception {
-        return usuarioDAO.buscarPorId(idUsuario);
+        return usuarioDAO.findById(idUsuario);
     }
     
     /**
@@ -116,7 +112,7 @@ public class UsuarioController {
      * @return The user if found, null otherwise
      */
     public Usuario obtenerUsuarioPorDni(String dni) throws Exception {
-        return usuarioDAO.buscarPorDNI(dni);
+        return usuarioDAO.findByDni(dni);
     }
     
     /**
@@ -124,7 +120,7 @@ public class UsuarioController {
      * @return A list of all users
      */
     public List<Usuario> listarUsuarios() throws Exception {
-        return usuarioDAO.listarTodos();
+        return usuarioDAO.findAll();
     }
     
     /**
@@ -133,7 +129,15 @@ public class UsuarioController {
      * @return List of users matching the search
      */
     public List<Usuario> buscarUsuariosPorDNI(String dni) throws Exception {
-        return usuarioDAO.buscarPorDNIParcial(dni);
+        // Since findByDni doesn't support partial search, we'll implement a simple version
+        List<Usuario> allUsers = usuarioDAO.findAll();
+        List<Usuario> matchingUsers = new ArrayList<>();
+        for (Usuario user : allUsers) {
+            if (user.getDni().contains(dni)) {
+                matchingUsers.add(user);
+            }
+        }
+        return matchingUsers;
     }
     
     /**
@@ -142,7 +146,7 @@ public class UsuarioController {
      * @return true if successful, false otherwise
      */
     public boolean registrarUsuario(Usuario usuario) throws Exception {
-        return usuarioDAO.insertar(usuario);
+        return usuarioDAO.insert(usuario);
     }
     
     /**
@@ -151,7 +155,7 @@ public class UsuarioController {
      * @return true if successful, false otherwise
      */
     public boolean actualizarUsuario(Usuario usuario) throws Exception {
-        return usuarioDAO.actualizar(usuario);
+        return usuarioDAO.update(usuario);
     }
     
     /**
@@ -161,11 +165,8 @@ public class UsuarioController {
      * @return true if credentials are valid, false otherwise
      */
     public boolean validarCredenciales(String dni, String contrasena) throws Exception {
-        Usuario usuario = usuarioDAO.buscarPorDNI(dni);
-        if (usuario != null) {
-            return usuario.getContrasena().equals(contrasena);
-        }
-        return false;
+        Usuario usuario = usuarioDAO.authenticate(dni, contrasena);
+        return usuario != null;
     }
     
     /**
@@ -173,6 +174,24 @@ public class UsuarioController {
      * @param idUsuario User's ID
      */
     public void actualizarUltimoAcceso(int idUsuario) throws Exception {
-        usuarioDAO.actualizarUltimoAcceso(idUsuario);
+        usuarioDAO.updateLastLogin(idUsuario);
+    }
+    
+    /**
+     * Search for a user by DNI (alias method)
+     * @param dni User's DNI
+     * @return The user if found, null otherwise
+     */
+    public Usuario buscarPorDNI(String dni) throws Exception {
+        return usuarioDAO.findByDni(dni);
+    }
+    
+    /**
+     * Search for a user by ID (alias method)
+     * @param idUsuario User's ID
+     * @return The user if found, null otherwise
+     */
+    public Usuario buscarPorId(int idUsuario) throws Exception {
+        return usuarioDAO.findById(idUsuario);
     }
 } 

@@ -89,28 +89,56 @@ public class ActividadDAO {
     
     /**
      * Delete an activity from the database
+     * First deletes all related RegistroParticipacion records, then deletes the activity
      * @param idActividad The ID of the activity to delete
      * @return true if successful, false otherwise
      */
     public boolean delete(int idActividad) {
-        String sql = "DELETE FROM Actividad WHERE idActividad = ?";
         Connection conn = null;
         PreparedStatement stmt = null;
         
         try {
             conn = DatabaseConnection.getConnection();
-            stmt = conn.prepareStatement(sql);
+            conn.setAutoCommit(false); // Start transaction
+            
+            // First, delete all RegistroParticipacion records associated with this activity
+            String deleteParticipationsSQL = "DELETE FROM RegistroParticipacion WHERE idActividad = ?";
+            stmt = conn.prepareStatement(deleteParticipationsSQL);
+            stmt.setInt(1, idActividad);
+            stmt.executeUpdate();
+            stmt.close();
+            
+            // Then, delete the activity itself
+            String deleteActivitySQL = "DELETE FROM Actividad WHERE idActividad = ?";
+            stmt = conn.prepareStatement(deleteActivitySQL);
             stmt.setInt(1, idActividad);
             
             int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            
+            if (rowsAffected > 0) {
+                conn.commit(); // Commit transaction
+                return true;
+            } else {
+                conn.rollback(); // Rollback if no activity was deleted
+                return false;
+            }
         } catch (SQLException e) {
+            try {
+                if (conn != null) {
+                    conn.rollback(); // Rollback transaction on error
+                }
+            } catch (SQLException rollbackEx) {
+                System.err.println("Error rolling back transaction: " + rollbackEx.getMessage());
+            }
             System.err.println("Error deleting activity: " + e.getMessage());
             return false;
         } finally {
             try {
                 if (stmt != null) stmt.close();
-                if (conn != null) conn.close();
+                if (conn != null) {
+                    conn.setAutoCommit(true); // Reset auto-commit
+                    conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }

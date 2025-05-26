@@ -9,7 +9,7 @@ import model.dao.PrediccionDAO;
 import model.dao.RegistroParticipacionDAO;
 
 /**
- * Controller class for handling Prediccion business logic and prediction algorithms
+ * Controlador para manejar la lógica de negocio de Prediccion y algoritmos de predicción
  */
 public class PrediccionController {
     private final PrediccionDAO prediccionDAO;
@@ -23,26 +23,30 @@ public class PrediccionController {
     }
     
     /**
-     * Generate a prediction for a campaign
-     * @param idCampana Campaign ID
-     * @param notas Notes about the prediction
-     * @return true if successful, false otherwise
+     * Genera una predicción para una campaña
+     * @param idCampana ID de la campaña
+     * @param notas Notas sobre la predicción
+     * @return true si es exitoso, false en caso contrario
      */
     public boolean generarPrediccion(int idCampana, String notas) {
-        // Check if campaign exists
+        // Verificar si la campaña existe
         Campana campana = campanaDAO.findById(idCampana);
         if (campana == null) {
-            return false; // Campaign doesn't exist
+            return false; // La campaña no existe
         }
         
-        // Calculate estimated participation based on historical data
+        // Calcular participación estimada basada en datos históricos
         int participacionEstimada = calcularParticipacionEstimada(idCampana);
         
-        // Create new prediction
+        // Calcular nivel de confianza basado en consistencia de datos históricos
+        double nivelConfianza = calcularNivelConfianza(idCampana);
+        
+        // Crear nueva predicción
         Prediccion prediccion = new Prediccion();
         prediccion.setIdCampana(idCampana);
         prediccion.setFechaPrediccion(new Date());
         prediccion.setParticipacionEstimada(participacionEstimada);
+        prediccion.setNivelConfianza(nivelConfianza);
         prediccion.setNotas(notas);
         
         // Check if prediction already exists for the campaign
@@ -51,6 +55,7 @@ public class PrediccionController {
             // Update existing prediction
             prediccionExistente.setFechaPrediccion(new Date());
             prediccionExistente.setParticipacionEstimada(participacionEstimada);
+            prediccionExistente.setNivelConfianza(nivelConfianza);
             prediccionExistente.setNotas(notas);
             return prediccionDAO.update(prediccionExistente);
         } else {
@@ -66,17 +71,21 @@ public class PrediccionController {
      * @param notas Notes about the prediction
      * @return true if successful, false otherwise
      */
-    public boolean actualizarPrediccion(int idPrediccion, int participacionEstimada, String notas) {
+        public boolean actualizarPrediccion(int idPrediccion, int participacionEstimada, String notas) {
         // Check if prediction exists
         Prediccion prediccion = prediccionDAO.findById(idPrediccion);
         if (prediccion == null) {
             return false; // Prediction doesn't exist
         }
-        
+
+        // Recalculate confidence level when updating manually
+        double nivelConfianza = calcularNivelConfianza(prediccion.getIdCampana());
+
         prediccion.setFechaPrediccion(new Date());
         prediccion.setParticipacionEstimada(participacionEstimada);
+        prediccion.setNivelConfianza(nivelConfianza);
         prediccion.setNotas(notas);
-        
+
         return prediccionDAO.update(prediccion);
     }
     
@@ -171,5 +180,52 @@ public class PrediccionController {
         // This would involve getting all activities in the campaign and summing their participants
         // For simplicity, we'll simulate this with a basic algorithm
         return idCampana * 10; // Simplified formula for demo purposes
+    }
+    
+    /**
+     * Calculate confidence level for a prediction based on historical data consistency
+     * @param idCampana Campaign ID
+     * @return Confidence level as a percentage (0-100)
+     */
+    private double calcularNivelConfianza(int idCampana) {
+        // Get campaign information
+        Campana campanaNueva = campanaDAO.findById(idCampana);
+        if (campanaNueva == null) {
+            return 50.0; // Default confidence for unknown campaigns
+        }
+        
+        // Get campaigns by the same responsible
+        List<Campana> campanasAnteriores = campanaDAO.findByResponsable(campanaNueva.getIdResponsable());
+        
+        // If this is the first campaign, confidence is moderate
+        if (campanasAnteriores.size() <= 1) {
+            return 60.0; // Moderate confidence for first campaign
+        }
+        
+        // Calculate consistency of historical data
+        double baseConfidence = 70.0; // Base confidence level
+        
+        // Factors that increase confidence:
+        // 1. More historical campaigns = higher confidence
+        int numCampanasHistoricas = campanasAnteriores.size() - 1; // Exclude current campaign
+        double factorExperiencia = Math.min(numCampanasHistoricas * 5.0, 20.0); // Max 20% boost
+        
+        // 2. Recent campaigns = higher confidence (simulate recency factor)
+        double factorRecencia = 5.0; // 5% boost for recent data
+        
+        // 3. Consistency factor (simulate based on campaign ID for demo)
+        // In real implementation, this would analyze variance in historical participation
+        double factorConsistencia = 100.0 - (idCampana % 30); // Simulate variance (0-30% reduction)
+        factorConsistencia = Math.max(factorConsistencia, 70.0); // Minimum 70% consistency
+        factorConsistencia = (factorConsistencia - 70.0) / 3.0; // Convert to 0-10% boost
+        
+        // Calculate final confidence level
+        double nivelConfianza = baseConfidence + factorExperiencia + factorRecencia + factorConsistencia;
+        
+        // Ensure confidence is within valid range (0-100)
+        nivelConfianza = Math.max(0.0, Math.min(100.0, nivelConfianza));
+        
+        // Round to 2 decimal places
+        return Math.round(nivelConfianza * 100.0) / 100.0;
     }
 } 

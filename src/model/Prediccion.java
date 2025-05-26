@@ -3,28 +3,30 @@ package model;
 import java.util.Date;
 
 /**
- * Class representing predictions for campaign participation
+ * Clase que representa las predicciones de participación en campañas
  */
 public class Prediccion {
     private int idPrediccion;
     private int idCampana;
     private Date fechaPrediccion;
     private int participacionEstimada;
+    private double nivelConfianza;
     private String notas;
     
-    // Constructor
+    // Constructores
     public Prediccion() {
     }
     
-    public Prediccion(int idPrediccion, int idCampana, Date fechaPrediccion, int participacionEstimada, String notas) {
+    public Prediccion(int idPrediccion, int idCampana, Date fechaPrediccion, int participacionEstimada, double nivelConfianza, String notas) {
         this.idPrediccion = idPrediccion;
         this.idCampana = idCampana;
         this.fechaPrediccion = fechaPrediccion;
         this.participacionEstimada = participacionEstimada;
+        this.nivelConfianza = nivelConfianza;
         this.notas = notas;
     }
     
-    // Getters and Setters
+    // Métodos getter y setter
     public int getIdPrediccion() {
         return idPrediccion;
     }
@@ -55,6 +57,14 @@ public class Prediccion {
 
     public void setParticipacionEstimada(int participacionEstimada) {
         this.participacionEstimada = participacionEstimada;
+    }
+
+    public double getNivelConfianza() {
+        return nivelConfianza;
+    }
+
+    public void setNivelConfianza(double nivelConfianza) {
+        this.nivelConfianza = nivelConfianza;
     }
 
     public String getNotas() {
