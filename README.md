@@ -82,9 +82,6 @@ java -cp "lib/*;build" Main
 - **DNI**: zsnow
 - **Contraseña**: 1
 
-### Usuario Regular
-- **DNI**: 87654321
-- **Contraseña**: user123
 
 ## 📁 Estructura del Proyecto
 
@@ -204,11 +201,11 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 
 ## 👨‍💻 Autor
 
-**Manuel Vera** - 
+**Manuel Vera** - [✉️](mailto:mveraba01@ucvvirtual.edu.pe)
 
-**Juan Vidal**  
+**Juan Vidal** - [✉️](mailto:jvidalmo02@ucvvirtual.edu.pe)
 
-**Juan Moreno**
+**Juan Moreno** - [✉️](mailto:jmorenoto01@ucvvirtual.edu.pe)
 
 ---
 
