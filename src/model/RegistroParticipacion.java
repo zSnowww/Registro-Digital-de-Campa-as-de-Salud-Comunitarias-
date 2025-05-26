@@ -1,5 +1,7 @@
 package model;
 
+import java.util.Date;
+
 /**
  * Class representing the record of participation in activities
  */
@@ -9,9 +11,12 @@ public class RegistroParticipacion {
     private int idActividad;
     private String resultado;
     private String observaciones;
+    private Date fechaRegistro;
+    private Participante participante; // Referencia al participante
     
     // Constructor
     public RegistroParticipacion() {
+        this.fechaRegistro = new Date(); // Fecha actual por defecto
     }
     
     public RegistroParticipacion(int idRegistro, int idParticipante, int idActividad, String resultado, String observaciones) {
@@ -20,6 +25,7 @@ public class RegistroParticipacion {
         this.idActividad = idActividad;
         this.resultado = resultado;
         this.observaciones = observaciones;
+        this.fechaRegistro = new Date(); // Fecha actual por defecto
     }
     
     // Getters and Setters
@@ -61,5 +67,21 @@ public class RegistroParticipacion {
 
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
+    }
+
+    public Date getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(Date fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
+    }
+
+    public Participante getParticipante() {
+        return participante;
+    }
+
+    public void setParticipante(Participante participante) {
+        this.participante = participante;
     }
 } 
