@@ -1,40 +1,92 @@
-# Archivos de configuración con datos sensibles
-src/config/DatabaseConfig.properties
-
-# Archivos de IDE y compilación
-nbproject/
+# ===== ARCHIVOS COMPILADOS Y TEMPORALES =====
+# Archivos compilados de Java
+*.class
 build/
 dist/
-*.class
+target/
+
+# Archivos JAR (excepto dependencias en lib/)
 *.jar
+!lib/*.jar
+
+# Archivos WAR y EAR
 *.war
 *.ear
 
-# Archivos de sistema
-.DS_Store
-Thumbs.db
+# ===== ARCHIVOS DE IDE =====
+# NetBeans
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
 
-# Archivos de logs
-*.log
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
 
-# Archivos temporales
+# Eclipse
+.metadata
+bin/
+tmp/
 *.tmp
-*.temp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.project
+.classpath
 
-# Archivos de configuración local
+# Visual Studio Code
+.vscode/
+
+# ===== ARCHIVOS DE SISTEMA =====
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# ===== ARCHIVOS DE LOGS =====
+*.log
+logs/
+
+# ===== ARCHIVOS DE CONFIGURACIÓN SENSIBLES =====
+# Archivos con credenciales de base de datos
+src/config/DatabaseConfig.properties
+database.properties
 application-local.properties
 application-dev.properties
 
-# Archivos de dependencias
-lib/
-node_modules/
+# ===== ARCHIVOS TEMPORALES =====
+*.tmp
+*.temp
+*.cache
 
-# Archivos de respaldo
-*.bak
+# ===== ARCHIVOS DE RESPALDO =====
 *.backup
-*~
+*.bak
 
-# Archivos de base de datos
+# ===== ARCHIVOS DE BASE DE DATOS LOCALES =====
 *.db
 *.sqlite
 *.sqlite3
+
+# ===== OTROS =====
+# Archivos de documentación generados
+javadoc/
+
+# Archivos de pruebas
+test-output/
