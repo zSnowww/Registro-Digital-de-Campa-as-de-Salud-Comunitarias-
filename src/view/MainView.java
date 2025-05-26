@@ -114,7 +114,19 @@ public class MainView extends BaseForm {
         JMenu menuActividades = new JMenu("Actividades");
         JMenuItem itemVerActividades = new JMenuItem("Ver Actividades");
         itemVerActividades.addActionListener(e -> cardLayout.show(cardPanel, PANEL_ACTIVIDADES));
+        JMenuItem itemRegistrarParticipacion = new JMenuItem("Registrar Participación");
+        itemRegistrarParticipacion.addActionListener(e -> {
+            RegistroParticipacionView registroView = new RegistroParticipacionView();
+            registroView.setVisible(true);
+        });
+        JMenuItem itemVerCobertura = new JMenuItem("Ver Cobertura y Resultados");
+        itemVerCobertura.addActionListener(e -> {
+            CoberturaActividadView coberturaView = new CoberturaActividadView();
+            coberturaView.setVisible(true);
+        });
         menuActividades.add(itemVerActividades);
+        menuActividades.add(itemRegistrarParticipacion);
+        menuActividades.add(itemVerCobertura);
         
         // Participant menu
         JMenu menuParticipantes = new JMenu("Participantes");
