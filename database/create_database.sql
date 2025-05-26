@@ -1,11 +1,8 @@
--- Create database
+-- Crear la base de datos
 CREATE DATABASE CampanaSalud;
-GO
-
 USE CampanaSalud;
-GO
 
--- Create tables
+-- Crear tabla Usuario
 CREATE TABLE Usuario (
     idUsuario INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(100) NOT NULL,
@@ -15,26 +12,32 @@ CREATE TABLE Usuario (
     rol VARCHAR(50) NOT NULL,
     contrasena VARCHAR(100) NOT NULL,
     fechaCreacion DATETIME DEFAULT GETDATE(),
-    ultimoAcceso DATETIME,
+    ultimoAcceso DATETIME DEFAULT GETDATE(),
     activo BIT DEFAULT 1
 );
-GO
 
-CREATE TABLE Campana (
-    idCampana INT PRIMARY KEY IDENTITY(1,1),
-    nombre VARCHAR(200) NOT NULL,
-    descripcion TEXT,
-    fechaInicio DATE NOT NULL,
-    fechaFin DATE NOT NULL,
-    idResponsable INT NOT NULL,
-    estado VARCHAR(20) DEFAULT 'Planificada',
-    metaParticipantes INT,
-    participantesRegistrados INT DEFAULT 0,
-    fechaCreacion DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (idResponsable) REFERENCES Usuario(idUsuario)
+-- Crear tabla TipoActividad
+CREATE TABLE TipoActividad (
+    idTipoActividad INT PRIMARY KEY IDENTITY(1,1),
+    nombre VARCHAR(50) NOT NULL,
+    descripcion TEXT
 );
-GO
 
+-- Crear tabla Actividad
+CREATE TABLE Actividad (
+    idActividad INT PRIMARY KEY IDENTITY(1,1),
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    fechaInicio DATETIME NOT NULL,
+    fechaFin DATETIME NOT NULL,
+    ubicacion VARCHAR(200),
+    idTipoActividad INT,
+    capacidad INT NOT NULL DEFAULT 40,
+    estado VARCHAR(20) DEFAULT 'planificada' CHECK (estado IN ('planificada', 'en_curso', 'finalizada', 'cancelada')),
+    FOREIGN KEY (idTipoActividad) REFERENCES TipoActividad(idTipoActividad)
+);
+
+-- Crear tabla Participante
 CREATE TABLE Participante (
     idParticipante INT PRIMARY KEY IDENTITY(1,1),
     nombre VARCHAR(100) NOT NULL,
@@ -48,58 +51,74 @@ CREATE TABLE Participante (
     fechaRegistro DATETIME DEFAULT GETDATE(),
     activo BIT DEFAULT 1
 );
-GO
 
-CREATE TABLE Actividad (
-    idActividad INT PRIMARY KEY IDENTITY(1,1),
-    nombre VARCHAR(200) NOT NULL,
-    descripcion TEXT,
-    fecha DATE NOT NULL,
-    hora VARCHAR(10) NOT NULL,
-    idCampana INT NOT NULL,
-    capacidad INT,
-    participantesRegistrados INT DEFAULT 0,
-    estado VARCHAR(20) DEFAULT 'Planificada',
-    FOREIGN KEY (idCampana) REFERENCES Campana(idCampana)
-);
-GO
-
+-- Crear tabla RegistroParticipacion
 CREATE TABLE RegistroParticipacion (
     idRegistro INT PRIMARY KEY IDENTITY(1,1),
-    idParticipante INT NOT NULL,
-    idActividad INT NOT NULL,
-    resultado VARCHAR(100),
-    observaciones TEXT,
+    idParticipante INT,
+    idActividad INT,
     fechaRegistro DATETIME DEFAULT GETDATE(),
+    resultado VARCHAR(20) DEFAULT 'completado' CHECK (resultado IN ('completado', 'incompleto', 'ausente')),
+    observaciones TEXT,
     FOREIGN KEY (idParticipante) REFERENCES Participante(idParticipante),
-    FOREIGN KEY (idActividad) REFERENCES Actividad(idActividad),
-    CONSTRAINT UC_Participacion UNIQUE (idParticipante, idActividad)
+    FOREIGN KEY (idActividad) REFERENCES Actividad(idActividad)
 );
-GO
 
+-- Crear tabla Campana
+CREATE TABLE Campana (
+    idCampana INT PRIMARY KEY IDENTITY(1,1),
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    fechaInicio DATE NOT NULL,
+    fechaFin DATE NOT NULL,
+    estado VARCHAR(20) DEFAULT 'activa' CHECK (estado IN ('activa', 'finalizada', 'cancelada')),
+    metaParticipantes INT NOT NULL DEFAULT 30,
+    participantesRegistrados INT DEFAULT 0
+);
+
+-- Crear tabla Prediccion
 CREATE TABLE Prediccion (
     idPrediccion INT PRIMARY KEY IDENTITY(1,1),
-    idCampana INT NOT NULL,
-    fechaPrediccion DATE NOT NULL,
-    participacionEstimada INT NOT NULL,
-    nivelConfianza DECIMAL(5,2),
-    notas TEXT,
-    fechaCreacion DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (idCampana) REFERENCES Campana(idCampana),
-    CONSTRAINT UC_Prediccion_Campana UNIQUE (idCampana)
+    idActividad INT,
+    fechaPrediccion DATETIME DEFAULT GETDATE(),
+    participantesEsperados INT NOT NULL,
+    nivelConfianza DECIMAL(3,2) NOT NULL DEFAULT 0.85,
+    FOREIGN KEY (idActividad) REFERENCES Actividad(idActividad)
 );
-GO
 
-CREATE TABLE LogActividad (
-    idLog INT PRIMARY KEY IDENTITY(1,1),
-    tabla VARCHAR(50) NOT NULL,
-    accion VARCHAR(20) NOT NULL,
-    idRegistro INT NOT NULL,
-    fechaAccion DATETIME DEFAULT GETDATE(),
-    usuario VARCHAR(100),
-    detalles TEXT
-);
-GO
+-- Insertar datos iniciales
+INSERT INTO TipoActividad (nombre, descripcion) VALUES
+('Taller', 'Sesiones prácticas de aprendizaje'),
+('Charla', 'Presentaciones informativas'),
+('Seminario', 'Eventos académicos extensos'),
+('Curso', 'Programas de formación estructurados');
+
+-- Insertar usuario administrador por defecto
+INSERT INTO Usuario (nombre, apellido, correo, dni, rol, contrasena) VALUES
+('Manuel', 'Vera', 'mvera@dev.com', 'zsnow', 'Administrador', '1'),
+('Juan', 'Jaramillo', 'juanjx6@dev.com', 'juanjx6', 'Desarrollador', '1'),
+('Jorge', 'Moreno', 'jmoreno@dev.com', 'jmoreno', 'Desarrollador', '1');
+
+-- Insertar actividades de ejemplo con capacidades predefinidas
+INSERT INTO Actividad (nombre, descripcion, fechaInicio, fechaFin, ubicacion, idTipoActividad, capacidad) VALUES
+('Taller de Programación Java', 'Introducción a Java', '2024-03-01 09:00:00', '2024-03-01 13:00:00', 'Aula 101', 1, 30),
+('Charla sobre Inteligencia Artificial', 'Fundamentos de IA', '2024-03-02 15:00:00', '2024-03-02 17:00:00', 'Auditorio', 2, 50),
+('Seminario de Desarrollo Web', 'Tecnologías modernas', '2024-03-03 09:00:00', '2024-03-03 18:00:00', 'Centro de Convenciones', 3, 100),
+('Curso de Base de Datos', 'SQL y NoSQL', '2024-03-04 14:00:00', '2024-03-04 18:00:00', 'Laboratorio 2', 4, 25);
+
+-- Insertar campañas de ejemplo con metas predefinidas
+INSERT INTO Campana (nombre, descripcion, fechaInicio, fechaFin, metaParticipantes) VALUES
+('Campaña Talleres 2024', 'Promoción de talleres', '2024-03-01', '2024-03-31', 25),
+('Campaña Charlas 2024', 'Promoción de charlas', '2024-03-01', '2024-03-31', 40),
+('Campaña Seminarios 2024', 'Promoción de seminarios', '2024-03-01', '2024-03-31', 80),
+('Campaña Cursos 2024', 'Promoción de cursos', '2024-03-01', '2024-03-31', 20);
+
+-- Insertar predicciones de ejemplo con nivel de confianza predefinido
+INSERT INTO Prediccion (idActividad, participantesEsperados, nivelConfianza) VALUES
+(1, 25, 0.85),
+(2, 40, 0.85),
+(3, 80, 0.85),
+(4, 20, 0.85);
 
 -- Create views for reporting
 CREATE VIEW vw_ParticipacionPorActividad AS
@@ -114,45 +133,40 @@ FROM
     LEFT JOIN RegistroParticipacion rp ON a.idActividad = rp.idActividad
 GROUP BY 
     a.idActividad, a.nombre, c.nombre;
-GO
 
 CREATE VIEW vw_ParticipacionPorCampana AS
 SELECT 
     c.idCampana,
     c.nombre AS nombreCampana,
     COUNT(DISTINCT rp.idParticipante) AS cantidadParticipantes,
-    COUNT(DISTINCT a.idActividad) AS cantidadActividades,
-    u.nombre + ' ' + u.apellido AS responsable
+    COUNT(DISTINCT a.idActividad) AS cantidadActividades
 FROM 
     Campana c
-    INNER JOIN Usuario u ON c.idResponsable = u.idUsuario
     LEFT JOIN Actividad a ON c.idCampana = a.idCampana
     LEFT JOIN RegistroParticipacion rp ON a.idActividad = rp.idActividad
 GROUP BY 
-    c.idCampana, c.nombre, u.nombre, u.apellido;
-GO
+    c.idCampana, c.nombre;
 
 CREATE VIEW vw_PrediccionVsRealidad AS
 SELECT 
     c.idCampana,
     c.nombre AS nombreCampana,
-    p.participacionEstimada,
+    p.participantesEsperados,
     COUNT(DISTINCT rp.idParticipante) AS participacionReal,
-    (COUNT(DISTINCT rp.idParticipante) - p.participacionEstimada) AS diferencia
+    (COUNT(DISTINCT rp.idParticipante) - p.participantesEsperados) AS diferencia
 FROM 
     Campana c
     INNER JOIN Prediccion p ON c.idCampana = p.idCampana
     LEFT JOIN Actividad a ON c.idCampana = a.idCampana
     LEFT JOIN RegistroParticipacion rp ON a.idActividad = rp.idActividad
 GROUP BY 
-    c.idCampana, c.nombre, p.participacionEstimada;
-GO
+    c.idCampana, c.nombre, p.participantesEsperados;
 
 -- Create stored procedures
 CREATE PROCEDURE sp_RegistrarParticipacion
     @idParticipante INT,
     @idActividad INT,
-    @resultado VARCHAR(100) = NULL,
+    @resultado VARCHAR(20) = NULL,
     @observaciones TEXT = NULL
 AS
 BEGIN
@@ -192,43 +206,41 @@ BEGIN
         THROW;
     END CATCH
 END;
-GO
 
 CREATE PROCEDURE sp_GenerarPrediccion
     @idCampana INT
 AS
 BEGIN
-    DECLARE @participacionEstimada INT;
-    DECLARE @nivelConfianza DECIMAL(5,2);
+    DECLARE @participantesEsperados INT;
+    DECLARE @nivelConfianza DECIMAL(3,2);
     
     -- Calcular predicción basada en datos históricos
-    SELECT @participacionEstimada = AVG(participantesRegistrados) * 1.1
+    SELECT @participantesEsperados = AVG(participantesRegistrados) * 1.1
     FROM Campana
-    WHERE estado = 'Completada'
+    WHERE estado = 'finalizada'
     AND fechaInicio >= DATEADD(MONTH, -6, GETDATE());
     
     -- Calcular nivel de confianza basado en la variabilidad de datos históricos
     SELECT @nivelConfianza = 100 - (STDEV(participantesRegistrados) * 10)
     FROM Campana
-    WHERE estado = 'Completada'
+    WHERE estado = 'finalizada'
     AND fechaInicio >= DATEADD(MONTH, -6, GETDATE());
     
     -- Insertar o actualizar predicción
     IF EXISTS (SELECT 1 FROM Prediccion WHERE idCampana = @idCampana)
     BEGIN
         UPDATE Prediccion
-        SET participacionEstimada = @participacionEstimada,
+        SET participantesEsperados = @participantesEsperados,
             nivelConfianza = @nivelConfianza,
             fechaPrediccion = GETDATE()
         WHERE idCampana = @idCampana;
     END
     ELSE
     BEGIN
-        INSERT INTO Prediccion (idCampana, fechaPrediccion, participacionEstimada, nivelConfianza)
-        VALUES (@idCampana, GETDATE(), @participacionEstimada, @nivelConfianza);
+        INSERT INTO Prediccion (idCampana, fechaPrediccion, participantesEsperados, nivelConfianza)
+        VALUES (@idCampana, GETDATE(), @participantesEsperados, @nivelConfianza);
     END
 END;
-GO
 
 CREATE PROCEDURE sp_ObtenerEstadisticasCampana
     @idCampana INT
@@ -247,11 +259,8 @@ BEGIN
     WHERE c.idCampana = @idCampana
     GROUP BY c.nombre, c.metaParticipantes, c.participantesRegistrados;
 END;
-GO
 
 -- Create triggers
-
--- Trigger para actualizar contadores de participación
 CREATE TRIGGER tr_ActualizarContadores
 ON RegistroParticipacion
 AFTER DELETE
@@ -268,132 +277,10 @@ BEGIN
     INNER JOIN Actividad a ON c.idCampana = a.idCampana
     INNER JOIN deleted d ON a.idActividad = d.idActividad;
 END;
-GO
-
--- Trigger para logging de cambios
-CREATE TRIGGER tr_LogCambios
-ON Campana
-AFTER INSERT, UPDATE, DELETE
-AS
-BEGIN
-    DECLARE @accion VARCHAR(20);
-    
-    IF EXISTS (SELECT 1 FROM inserted) AND EXISTS (SELECT 1 FROM deleted)
-        SET @accion = 'UPDATE';
-    ELSE IF EXISTS (SELECT 1 FROM inserted)
-        SET @accion = 'INSERT';
-    ELSE
-        SET @accion = 'DELETE';
-    
-    INSERT INTO LogActividad (tabla, accion, idRegistro, usuario, detalles)
-    SELECT 
-        'Campana',
-        @accion,
-        COALESCE(i.idCampana, d.idCampana),
-        SYSTEM_USER,
-        'Cambio en campaña: ' + COALESCE(i.nombre, d.nombre)
-    FROM inserted i
-    FULL OUTER JOIN deleted d ON i.idCampana = d.idCampana;
-END;
-GO
-
--- Create cursor for batch processing
-CREATE PROCEDURE sp_ProcesarParticipantesInactivos
-AS
-BEGIN
-    DECLARE @idParticipante INT;
-    DECLARE @ultimaParticipacion DATE;
-    
-    DECLARE participante_cursor CURSOR FOR
-    SELECT p.idParticipante, MAX(rp.fechaRegistro)
-    FROM Participante p
-    LEFT JOIN RegistroParticipacion rp ON p.idParticipante = rp.idParticipante
-    GROUP BY p.idParticipante
-    HAVING MAX(rp.fechaRegistro) < DATEADD(MONTH, -6, GETDATE())
-    OR MAX(rp.fechaRegistro) IS NULL;
-    
-    OPEN participante_cursor;
-    FETCH NEXT FROM participante_cursor INTO @idParticipante, @ultimaParticipacion;
-    
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-        UPDATE Participante
-        SET activo = 0
-        WHERE idParticipante = @idParticipante;
-        
-        FETCH NEXT FROM participante_cursor INTO @idParticipante, @ultimaParticipacion;
-    END
-    
-    CLOSE participante_cursor;
-    DEALLOCATE participante_cursor;
-END;
-GO
-
--- Insert initial admin user
-INSERT INTO Usuario (nombre, apellido, correo, dni, rol, contrasena)
-VALUES ('Admin', 'Sistema', 'admin@campanasalud.com', '00000000', 'Administrador', 'admin123');
-GO
-
--- Insert sample data for testing
--- Sample users
-INSERT INTO Usuario (nombre, apellido, correo, dni, rol, contrasena)
-VALUES ('Juan', 'Pérez', 'juan.perez@campanasalud.com', '12345678', 'Gestor', 'pass123');
-
-INSERT INTO Usuario (nombre, apellido, correo, dni, rol, contrasena)
-VALUES ('María', 'López', 'maria.lopez@campanasalud.com', '87654321', 'Profesional de Salud', 'pass123');
-
--- Sample campaigns
-INSERT INTO Campana (nombre, descripcion, fechaInicio, fechaFin, idResponsable)
-VALUES ('Campaña de Vacunación 2023', 'Campaña anual de vacunación contra la influenza', '2023-05-01', '2023-06-30', 1);
-
-INSERT INTO Campana (nombre, descripcion, fechaInicio, fechaFin, idResponsable)
-VALUES ('Prevención de Diabetes', 'Campaña de concientización y detección temprana de diabetes', '2023-07-01', '2023-08-31', 2);
-
--- Sample activities
-INSERT INTO Actividad (nombre, descripcion, fecha, hora, idCampana)
-VALUES ('Vacunación en Centro Comunitario', 'Jornada de vacunación en el centro comunitario local', '2023-05-15', '09:00', 1);
-
-INSERT INTO Actividad (nombre, descripcion, fecha, hora, idCampana)
-VALUES ('Charla Informativa', 'Charla sobre la importancia de la vacunación', '2023-05-10', '15:00', 1);
-
-INSERT INTO Actividad (nombre, descripcion, fecha, hora, idCampana)
-VALUES ('Exámenes de Glucosa', 'Toma de muestras y análisis de niveles de glucosa', '2023-07-15', '08:00', 2);
-
--- Sample participants
-INSERT INTO Participante (nombre, apellido, dni, edad, sexo, direccion)
-VALUES ('Carlos', 'Gómez', '11223344', 45, 'Masculino', 'Av. Principal 123');
-
-INSERT INTO Participante (nombre, apellido, dni, edad, sexo, direccion)
-VALUES ('Ana', 'Martínez', '44332211', 35, 'Femenino', 'Calle Secundaria 456');
-
-INSERT INTO Participante (nombre, apellido, dni, edad, sexo, direccion)
-VALUES ('Pedro', 'Sánchez', '55667788', 60, 'Masculino', 'Jr. Los Pinos 789');
-
--- Sample registrations
-INSERT INTO RegistroParticipacion (idParticipante, idActividad, resultado, observaciones)
-VALUES (1, 1, 'Completado', 'Se administró vacuna sin complicaciones');
-
-INSERT INTO RegistroParticipacion (idParticipante, idActividad, resultado, observaciones)
-VALUES (2, 1, 'Completado', 'Se administró vacuna sin complicaciones');
-
-INSERT INTO RegistroParticipacion (idParticipante, idActividad, resultado, observaciones)
-VALUES (1, 2, 'Asistió', 'Participó activamente en la charla');
-
-INSERT INTO RegistroParticipacion (idParticipante, idActividad, resultado, observaciones)
-VALUES (3, 3, 'Requiere seguimiento', 'Niveles de glucosa ligeramente elevados');
-
--- Sample predictions
-INSERT INTO Prediccion (idCampana, fechaPrediccion, participacionEstimada, notas)
-VALUES (1, '2023-04-15', 150, 'Basado en la participación del año anterior');
-
-INSERT INTO Prediccion (idCampana, fechaPrediccion, participacionEstimada, notas)
-VALUES (2, '2023-06-15', 200, 'Estimación basada en campañas similares');
-GO
 
 -- Create indexes for better performance
 CREATE INDEX idx_Campana_Fechas ON Campana(fechaInicio, fechaFin);
 CREATE INDEX idx_Actividad_Campana ON Actividad(idCampana);
 CREATE INDEX idx_RegistroParticipacion_Actividad ON RegistroParticipacion(idActividad);
 CREATE INDEX idx_RegistroParticipacion_Participante ON RegistroParticipacion(idParticipante);
-CREATE INDEX idx_Prediccion_Campana ON Prediccion(idCampana);
-GO 
+CREATE INDEX idx_Prediccion_Campana ON Prediccion(idCampana); 
