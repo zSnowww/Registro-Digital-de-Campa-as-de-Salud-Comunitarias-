@@ -16,6 +16,8 @@ target/
 # ===== ARCHIVOS DE IDE =====
 # NetBeans
 nbproject/private/
+nbproject/build-impl.xml
+nbproject/genfiles.properties
 nbbuild/
 nbdist/
 .nb-gradle/
