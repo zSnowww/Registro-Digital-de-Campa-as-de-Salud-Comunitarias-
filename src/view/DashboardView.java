@@ -4,11 +4,14 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 import javax.swing.table.*;
 import model.*;
 import controller.*;
+import model.database.DatabaseConnection;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -34,7 +37,16 @@ public class DashboardView extends BaseForm {
     
     public DashboardView() {
         super("Dashboard - Registro Digital de Campañas de Salud");
-        connection = DatabaseConnection.getConnection();
+        try {
+            connection = DatabaseConnection.getConnection();
+        } catch (SQLException e) {
+            System.err.println("Error connecting to database: " + e.getMessage());
+            // Show error dialog to user
+            JOptionPane.showMessageDialog(this, 
+                "Error de conexión a la base de datos: " + e.getMessage(), 
+                "Error de Conexión", 
+                JOptionPane.ERROR_MESSAGE);
+        }
         
         setupLayout();
         initializeComponents();

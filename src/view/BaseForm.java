@@ -14,7 +14,9 @@ public abstract class BaseForm extends JFrame {
         setTitle(title);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(800, 600);
-        setLocationRelativeTo(null);
+        
+        // Configurar para que se abra en el monitor secundario
+        setLocationForSecondaryMonitor();
         
         initComponents();
         addWindowListener(new WindowAdapter() {
@@ -23,6 +25,108 @@ public abstract class BaseForm extends JFrame {
                 onWindowClosing();
             }
         });
+    }
+    
+    /**
+     * Configura la ventana para que se abra en el monitor donde está activo NetBeans
+     */
+    private void setLocationForSecondaryMonitor() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice[] screens = ge.getScreenDevices();
+        
+        if (screens.length > 1) {
+            // Detectar en qué monitor está NetBeans buscando ventanas de Java
+            GraphicsDevice targetMonitor = detectNetBeansMonitor(screens);
+            
+            if (targetMonitor != null) {
+                Rectangle bounds = targetMonitor.getDefaultConfiguration().getBounds();
+                
+                // Centrar la ventana en el monitor donde está NetBeans
+                int x = bounds.x + (bounds.width - getWidth()) / 2;
+                int y = bounds.y + (bounds.height - getHeight()) / 2;
+                setLocation(x, y);
+            } else {
+                // Si no se puede detectar NetBeans, usar el segundo monitor por defecto
+                GraphicsDevice secondMonitor = screens[1];
+                Rectangle bounds = secondMonitor.getDefaultConfiguration().getBounds();
+                
+                int x = bounds.x + (bounds.width - getWidth()) / 2;
+                int y = bounds.y + (bounds.height - getHeight()) / 2;
+                setLocation(x, y);
+            }
+        } else {
+            // Si solo hay un monitor, centrar normalmente
+            setLocationRelativeTo(null);
+        }
+    }
+    
+    /**
+     * Detecta en qué monitor está ejecutándose NetBeans
+     */
+    private GraphicsDevice detectNetBeansMonitor(GraphicsDevice[] screens) {
+        try {
+            // Obtener todas las ventanas abiertas
+            Window[] windows = Window.getWindows();
+            
+            // Buscar ventanas que puedan ser NetBeans
+            for (Window window : windows) {
+                if (window.isVisible() && window instanceof Frame) {
+                    Frame frame = (Frame) window;
+                    String title = frame.getTitle();
+                    
+                    // Buscar ventanas que contengan "NetBeans" en el título
+                    if (title != null && (title.toLowerCase().contains("netbeans") || 
+                                        title.toLowerCase().contains("apache netbeans") ||
+                                        title.toLowerCase().contains("appinforme"))) {
+                        
+                        // Determinar en qué monitor está esta ventana
+                        Point location = frame.getLocation();
+                        for (GraphicsDevice screen : screens) {
+                            Rectangle bounds = screen.getDefaultConfiguration().getBounds();
+                            if (bounds.contains(location)) {
+                                return screen;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Si no encuentra NetBeans, buscar cualquier ventana de Java IDE
+            for (Window window : windows) {
+                if (window.isVisible() && window instanceof Frame) {
+                    Frame frame = (Frame) window;
+                    String className = frame.getClass().getName();
+                    
+                    // Buscar por nombres de clase típicos de IDEs
+                    if (className.contains("netbeans") || className.contains("ide") || 
+                        className.contains("MainFrame") || className.contains("ProjectFrame")) {
+                        
+                        Point location = frame.getLocation();
+                        for (GraphicsDevice screen : screens) {
+                            Rectangle bounds = screen.getDefaultConfiguration().getBounds();
+                            if (bounds.contains(location)) {
+                                return screen;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Como último recurso, usar el cursor del mouse para detectar el monitor activo
+            Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+            for (GraphicsDevice screen : screens) {
+                Rectangle bounds = screen.getDefaultConfiguration().getBounds();
+                if (bounds.contains(mouseLocation)) {
+                    return screen;
+                }
+            }
+            
+        } catch (Exception e) {
+            // Si hay algún error, continuar con el comportamiento por defecto
+            System.out.println("No se pudo detectar el monitor de NetBeans: " + e.getMessage());
+        }
+        
+        return null; // No se pudo detectar
     }
     
     private void initComponents() {
