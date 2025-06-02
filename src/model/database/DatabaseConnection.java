@@ -11,7 +11,7 @@ import java.util.Properties;
  * Class for handling database connections to SQL Server
  */
 public class DatabaseConnection {
-    private static final String CONFIG_FILE = "config/DatabaseConfig.properties";
+    private static final String CONFIG_FILE = "src/config/DatabaseConfig.properties";
     private static String DRIVER;
     private static String URL;
     private static String USER;
