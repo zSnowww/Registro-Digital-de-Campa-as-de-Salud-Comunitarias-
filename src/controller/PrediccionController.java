@@ -1,5 +1,6 @@
 package controller;
 
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import model.Campana;
@@ -17,9 +18,14 @@ public class PrediccionController {
     private final RegistroParticipacionDAO registroDAO;
     
     public PrediccionController() {
-        this.prediccionDAO = new PrediccionDAO();
-        this.campanaDAO = new CampanaDAO();
-        this.registroDAO = new RegistroParticipacionDAO();
+        try {
+            this.prediccionDAO = new PrediccionDAO();
+            this.campanaDAO = new CampanaDAO();
+            this.registroDAO = new RegistroParticipacionDAO();
+        } catch (SQLException e) {
+            System.err.println("Error initializing DAOs: " + e.getMessage());
+            throw new RuntimeException("Failed to initialize database connection", e);
+        }
     }
     
     /**

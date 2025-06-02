@@ -1,5 +1,6 @@
 package controller;
 
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import model.Campana;
@@ -12,7 +13,12 @@ public class CampanaController {
     private final CampanaDAO campanaDAO;
     
     public CampanaController() {
-        this.campanaDAO = new CampanaDAO();
+        try {
+            this.campanaDAO = new CampanaDAO();
+        } catch (SQLException e) {
+            System.err.println("Error initializing CampanaDAO: " + e.getMessage());
+            throw new RuntimeException("Failed to initialize database connection", e);
+        }
     }
     
     /**

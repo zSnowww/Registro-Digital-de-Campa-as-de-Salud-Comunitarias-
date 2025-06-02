@@ -1,5 +1,6 @@
 package controller;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import model.Usuario;
@@ -12,7 +13,12 @@ public class UsuarioController {
     private final UsuarioDAO usuarioDAO;
     
     public UsuarioController() {
-        usuarioDAO = new UsuarioDAO();
+        try {
+            usuarioDAO = new UsuarioDAO();
+        } catch (SQLException e) {
+            System.err.println("Error initializing UsuarioDAO: " + e.getMessage());
+            throw new RuntimeException("Failed to initialize database connection", e);
+        }
     }
     
     /**
