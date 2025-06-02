@@ -15,7 +15,7 @@ import model.database.DatabaseConnection;
 public class CampanaDAO {
     private Connection conn;
     
-    public CampanaDAO() {
+    public CampanaDAO() throws SQLException {
         this.conn = DatabaseConnection.getConnection();
     }
     

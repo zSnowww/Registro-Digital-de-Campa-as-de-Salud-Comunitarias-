@@ -15,7 +15,7 @@ import model.database.DatabaseConnection;
 public class PrediccionDAO {
     private Connection conn;
     
-    public PrediccionDAO() {
+    public PrediccionDAO() throws SQLException {
         this.conn = DatabaseConnection.getConnection();
     }
     

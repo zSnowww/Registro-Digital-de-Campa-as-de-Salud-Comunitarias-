@@ -15,7 +15,7 @@ import model.database.DatabaseConnection;
 public class UsuarioDAO {
     private Connection conn;
     
-    public UsuarioDAO() {
+    public UsuarioDAO() throws SQLException {
         this.conn = DatabaseConnection.getConnection();
     }
     
